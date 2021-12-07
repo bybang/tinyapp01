@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/bybang/tinyapp01/issues"
   },
-  "homepage": "https://github.com/bybang/tinyapp01#readme"
+  "homepage": "https://github.com/bybang/tinyapp01#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }

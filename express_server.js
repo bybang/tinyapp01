@@ -15,6 +15,7 @@ const urlDatabase = {
 // << Server Settings/middlewares >>
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+app.use(cookieParser());
 
 // << Routes(endpoint) >>
 //

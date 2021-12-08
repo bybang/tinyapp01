@@ -40,14 +40,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 app.post("/urls", (req, res) => {
-  const { longURL } = req.body
+  const { longURL } = req.body;
   if (!longURL) {
-    return res.status(400).send("Pass the longURL")
+    return res.status(400).send("Pass the longURL");
   }
 
-  let shortURL = generateRandomString()
+  let shortURL = generateRandomString();
 
-  urlDatabase[shortURL] = longURL
+  urlDatabase[shortURL] = longURL;
 
   res.redirect(`/urls/${shortURL}`);
 });
@@ -65,9 +65,17 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
+  const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
+});
+
+// <<< DELETE >>>
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  
+  delete urlDatabase[shortURL];
+  res.redirect("/urls");
 });
 
 // << Listener >>

@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 // << Routes(endpoint) >>
-// Homepage
+//
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -39,6 +39,7 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
 app.post("/urls", (req, res) => {
   const { longURL } = req.body;
   if (!longURL) {
@@ -60,7 +61,6 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
@@ -75,6 +75,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   
   delete urlDatabase[shortURL];
+  res.redirect("/urls");
+});
+
+// <<< UPDATE >>>
+app.post("/urls/:shortURL", (req, res) => {
+  // console.log(req.params.shortURL)
+  // console.log(req.body.newlongURL);
+  const shortURL = req.params.shortURL;
+  const newlongURL = req.body.newlongURL;
+
+  urlDatabase[shortURL] = newlongURL;
   res.redirect("/urls");
 });
 

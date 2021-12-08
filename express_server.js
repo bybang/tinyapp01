@@ -1,16 +1,22 @@
+// << Requirements >>
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+const generateRandomString = () => Math.random().toString(36).slice(7);
 
-app.set("view engine", "ejs");
-
+// Database
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
+// << Server Settings/middlewares >>
+app.use(bodyParser.urlencoded({extended: true}));
+app.set("view engine", "ejs");
+
+// << Routes(endpoint) >>
+// Homepage
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -34,8 +40,16 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const { longURL } = req.body
+  if (!longURL) {
+    return res.status(400).send("Pass the longURL")
+  }
+
+  let shortURL = generateRandomString()
+
+  urlDatabase[shortURL] = longURL
+
+  res.redirect(`/urls/${shortURL}`);
 });
 
 
@@ -49,10 +63,14 @@ app.get("/urls/:shortURL", (req, res) => {
   console.log(templateVars);
   res.render("urls_show", templateVars);
 });
+
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  const longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
+});
+
+// << Listener >>
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-function generateRandomString() {
-  Math.random().toString(36).slice(7);
-}

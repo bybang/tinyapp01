@@ -36,33 +36,61 @@ app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
 });
 
-
+// << Homepage >>
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
   res.render("urls_index", templateVars);
 });
 
+// <<< LOG IN >>>
+app.post("/login", (req, res) => {
+  const userID = req.body.username;
+
+  res.cookie("username", userID);
+
+  res.redirect("/urls");
+});
+
+// <<< LOGOUT ROUTE >>>
+app.post("/logout", (req, res) => {
+  res.clearCookie("username")
+  res.redirect("/urls");
+})
+
+
+// <<< new shortURL Generator >>>
+// Post request for new shortURL
 app.post("/urls", (req, res) => {
   const { longURL } = req.body;
+  let shortURL = generateRandomString();
+
   if (!longURL) {
     return res.status(400).send("Pass the longURL");
   }
-
-  let shortURL = generateRandomString();
 
   urlDatabase[shortURL] = longURL;
 
   res.redirect(`/urls/${shortURL}`);
 });
 
-
+// Get request; Renders the template urls_new
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"],
+  }
+  res.render("urls_new", templateVars);
 });
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { 
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"]
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -82,14 +110,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // <<< UPDATE >>>
 app.post("/urls/:shortURL", (req, res) => {
-  // console.log(req.params.shortURL)
-  // console.log(req.body.newlongURL);
   const shortURL = req.params.shortURL;
   const newlongURL = req.body.newlongURL;
 
   urlDatabase[shortURL] = newlongURL;
   res.redirect("/urls");
 });
+
 
 // << Listener >>
 app.listen(PORT, () => {

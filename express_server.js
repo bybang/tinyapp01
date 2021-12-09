@@ -112,14 +112,6 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-// <<< LOG IN >>>
-app.post("/login", (req, res) => {
-  const user_id = req.cookies["user_id"];
-
-  res.cookie("user_id", user_id);
-
-  res.redirect("/urls");
-});
 
 // <<< LOGOUT ROUTE >>>
 app.post("/logout", (req, res) => {
@@ -129,7 +121,7 @@ app.post("/logout", (req, res) => {
 
 
 // <<< new shortURL Generator >>>
-// Post request for new shortURL
+  // Post request for new shortURL
 app.post("/urls", (req, res) => {
   const { longURL } = req.body;
   let shortURL = generateRandomString();
@@ -143,7 +135,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// Get request; Renders the template urls_new
+  // Get request; Renders the template urls_new
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: userDatabase[req.cookies["user_id"]],
@@ -184,7 +176,24 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect("/urls");
 });
 
+// <<< LOG IN ROUTE >>>
 
+// Get requset for log in page
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: userDatabase[req.cookies["user_id"]],
+  };
+  res.render("urls_login", templateVars);
+});
+
+// Post requset for log in to the app
+app.post("/login", (req, res) => {
+  const user_id = req.cookies["user_id"];
+
+  res.cookie("user_id", user_id);
+
+  res.redirect("/urls");
+});
 
 // << Listener >>
 app.listen(PORT, () => {

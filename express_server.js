@@ -38,7 +38,7 @@ app.get("/fetch", (req, res) => {
 
 // << Homepage >>
 app.get("/urls", (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     urls: urlDatabase,
     username: req.cookies["username"]
   };
@@ -56,9 +56,9 @@ app.post("/login", (req, res) => {
 
 // <<< LOGOUT ROUTE >>>
 app.post("/logout", (req, res) => {
-  res.clearCookie("username")
+  res.clearCookie("username");
   res.redirect("/urls");
-})
+});
 
 
 // <<< new shortURL Generator >>>
@@ -80,13 +80,13 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     username: req.cookies["username"],
-  }
+  };
   res.render("urls_new", templateVars);
 });
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { 
+  const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     username: req.cookies["username"]

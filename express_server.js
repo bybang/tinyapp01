@@ -28,9 +28,9 @@ const userDatabase = {
 const getUserByEmail = (userDatabase, email) => {
   for (let userID in userDatabase) {
     if (userDatabase[userID].email === email) {
-      return true;
+      return userDatabase[userID];
     }
-    return false;
+    return undefined;
   }
 };
 
@@ -58,7 +58,10 @@ app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
 });
 
-// << Homepage >>
+
+
+// <<< HOMEPAGE >>>
+
 app.get("/urls", (req, res) => {
   console.log(req.cookies);
   const templateVars = {
@@ -68,7 +71,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+
+
 // <<< REGISTER ROUTE >>>
+
 // Get request for rendering register page
 app.get("/register", (req, res) => {
   const templateVars = {
@@ -92,7 +98,7 @@ app.post("/register", (req, res) => {
 
   // edge case 2 - exsisting email
 
-  if (getUserByEmail(newEmail)) {
+  if (getUserByEmail(userDatabase, newEmail)) {
     return res.status(400).send("The Email is already registered! Please log in or select different email address");
   }
 
@@ -121,7 +127,7 @@ app.post("/logout", (req, res) => {
 
 
 // <<< new shortURL Generator >>>
-  // Post request for new shortURL
+// Post request for new shortURL
 app.post("/urls", (req, res) => {
   const { longURL } = req.body;
   let shortURL = generateRandomString();
@@ -135,7 +141,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-  // Get request; Renders the template urls_new
+// Get request; Renders the template urls_new
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: userDatabase[req.cookies["user_id"]],
@@ -176,6 +182,8 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect("/urls");
 });
 
+
+
 // <<< LOG IN ROUTE >>>
 
 // Get requset for log in page
@@ -188,11 +196,25 @@ app.get("/login", (req, res) => {
 
 // Post requset for log in to the app
 app.post("/login", (req, res) => {
-  const user_id = req.cookies["user_id"];
+  const userEmail = req.body["email"];
+  const userPassword = req.body["password"];
+  let userInfo = getUserByEmail(userDatabase, userEmail);
 
-  res.cookie("user_id", user_id);
-
-  res.redirect("/urls");
+  // Check if email is exsisting in our Database
+  if (userInfo === undefined) {
+    return res.status(403).send("This email is not registered!");
+  }
+  // If email is exsisting,
+  if (userInfo) {
+    // check email and password are matches to the inside of that special user ID
+    if (userInfo.email === userEmail && userInfo.password === userPassword) {
+      res.cookie("user_id", userInfo.id);
+      // redirect to the homepage if user successfully login
+      res.redirect("/urls");
+    } else {
+      res.status(403).send("Incorrect password!");
+    }
+  }
 });
 
 // << Listener >>

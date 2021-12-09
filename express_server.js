@@ -25,6 +25,15 @@ const userDatabase = {
   }
 };
 
+const getUserByEmail = (userDatabase, email) => {
+  for (let userID in userDatabase) {
+    if (userDatabase[userID].email === email) {
+      return true;
+    }
+    return false;
+  }
+};
+
 // << Server Settings/middlewares >>
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -74,9 +83,17 @@ app.post("/register", (req, res) => {
   const newEmail = req.body["email"];
   const newPassword = req.body["password"];
 
+  // Error Handler
+
   // edge case 1 - empty email or password
   if (newEmail === "" || newPassword === "") {
-    return res.redirect("urls_registration");
+    return res.status(400).send("Please enter a correct input");
+  }
+
+  // edge case 2 - exsisting email
+
+  if (getUserByEmail(newEmail)) {
+    return res.status(400).send("The Email is already registered! Please log in or select different email address");
   }
 
   for (let user in userDatabase) {

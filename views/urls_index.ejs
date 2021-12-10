@@ -14,6 +14,8 @@
 <body>
   <main style="margin: 1em;">
     <h3>My URLs</h3>
+    <% if (user) { %>
+
     <table class="table">
       <thead>
         <tr>
@@ -27,20 +29,35 @@
         <% for(let shortURL in urls) { %>
           <tr>
             <td><%= shortURL %></td>
-            <td><%= urls[shortURL] %></td>
+            <td><%= urls[shortURL].longURL %></td>
             <td>
               <form method="GET" class="form-inline" action="/urls/<%= shortURL %>">
               <button type="submit" class="btn btn-outline-primary"><b>EDIT</b></button>
+              </form>
             </td>
             <td>
                 <form method="POST" class="form-inline" action="/urls/<%= shortURL %>/delete">
                 <button type="submit" class="btn btn-outline-danger"><b>DELETE</b></button>
+                </form>
               </td>
             </tr>
           <% } %>
         </tbody>
       </table>
-    </form>
+      <% } else { %>
+        <div class="alert alert-danger" role="alert">
+          <h5 class="alert heading">Please Login to see the urls!</h5>
+          <p>
+            If you don't have the account yet, please click register
+          </p>
+        </div>
+        <form method="GET" action="/login" class="d-inline align-middle">
+          <button type="submit" class="btn btn-outline-info"><b>Login</b></button>
+        </form>
+        <form method="GET" action="/register" class="d-inline align-middle">
+          <button type="submit" class="btn btn-outline-info"><b>Register</b></button>
+        </form> 
+      <% } %>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

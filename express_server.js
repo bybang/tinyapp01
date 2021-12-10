@@ -8,8 +8,14 @@ const generateRandomString = () => Math.random().toString(36).slice(2, 8);
 
 // Database
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 const userDatabase = {
@@ -22,6 +28,11 @@ const userDatabase = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "1234"
+  },
+  "aJ48lW": {
+    id: "aJ48lW",
+    email: "user3@example.com",
+    password: "qwer"
   }
 };
 
@@ -47,26 +58,25 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json("urlDatabase");
 });
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
-});
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
-});
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
+// app.get("/set", (req, res) => {
+//   const a = 1;
+//   res.send(`a = ${a}`);
+// });
+// app.get("/fetch", (req, res) => {
+//   res.send(`a = ${a}`);
+// });
 
 
 
 // <<< HOMEPAGE >>>
 
 app.get("/urls", (req, res) => {
-  console.log(req.cookies);
   const templateVars = {
-    urls: urlDatabase,
     user: userDatabase[req.cookies["user_id"]],
+    urls: urlDatabase,
   };
   res.render("urls_index", templateVars);
 });
@@ -80,6 +90,10 @@ app.get("/register", (req, res) => {
   const templateVars = {
     user: userDatabase[req.cookies["user_id"]],
   };
+  // if user is logged in, redirect to the homepage
+  if (req.cookies["user_id"]) {
+    res.redirect("/urls");
+  }
   res.render("urls_registration", templateVars);
 });
 
@@ -127,42 +141,67 @@ app.post("/logout", (req, res) => {
 
 
 // <<< new shortURL Generator >>>
-// Post request for new shortURL
-app.post("/urls", (req, res) => {
-  const { longURL } = req.body;
-  let shortURL = generateRandomString();
-
-  if (!longURL) {
-    return res.status(400).send("Pass the longURL");
-  }
-
-  urlDatabase[shortURL] = longURL;
-
-  res.redirect(`/urls/${shortURL}`);
-});
 
 // Get request; Renders the template urls_new
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: userDatabase[req.cookies["user_id"]],
   };
+
+  // if user is not logged in, redirect them to the homepage
+  if (!req.cookies["user_id"]) {
+    return res.redirect("/login");
+  }
+
   res.render("urls_new", templateVars);
 });
 
+// Post request for new shortURL
+app.post("/urls", (req, res) => {
+  const { longURL } = req.body;
+  let shortURL = generateRandomString();
 
+  // if users are not logged in, they can't use the generator. Redirect them to the login page
+  if (!req.cookies["user_id"]) {
+    return res.status(401).send("Wrong path");
+  }
+  // if long URL did not passed to the generator
+  if (!longURL) {
+    return res.status(400).send("Pass the longURL");
+  }
+
+  urlDatabase[shortURL] = {
+    longURL,
+    userID: req.cookies["user_id"]
+  };
+
+  res.redirect(`/urls/${shortURL}`);
+});
+
+// A page after generate the shortURL
 app.get("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL =  urlDatabase[shortURL].longURL;
+
   const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    shortURL,
+    longURL,
     user: userDatabase[req.cookies["user_id"]]
   };
+
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
-  res.redirect(longURL);
+  // check if shortURL exsist
+  if (urlDatabase[shortURL]) {
+    const longURL = urlDatabase[shortURL].longURL;
+    res.redirect(longURL);
+  } else {
+    // if shortURL not exsist, send them error(page)
+    res.redirect("https://http.cat/400");
+  }
 });
 
 // <<< DELETE >>>
@@ -170,6 +209,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   
   delete urlDatabase[shortURL];
+
   res.redirect("/urls");
 });
 
@@ -178,7 +218,7 @@ app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newlongURL = req.body.newlongURL;
 
-  urlDatabase[shortURL] = newlongURL;
+  urlDatabase[shortURL].longURL = newlongURL;
   res.redirect("/urls");
 });
 

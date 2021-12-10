@@ -5,6 +5,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const generateRandomString = () => Math.random().toString(36).slice(2, 8);
+const bcrypt = require('bcryptjs');
 
 // Database
 const urlDatabase = {
@@ -22,17 +23,17 @@ const userDatabase = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "test"
+    password: bcrypt.hashSync("test", 10)
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "1234"
+    password: bcrypt.hashSync("1234", 10)
   },
   "aJ48lW": {
     id: "aJ48lW",
     email: "user3@example.com",
-    password: "qwer"
+    password: bcrypt.hashSync("qwer", 10)
   },
 };
 
@@ -85,7 +86,9 @@ app.get("/urls", (req, res) => {
 
 
 
-// <<< REGISTER ROUTE >>>
+/*
+* <<< REGISTER ROUTE >>>
+*/
 
 // Get request for rendering register page
 app.get("/register", (req, res) => {
@@ -104,11 +107,12 @@ app.post("/register", (req, res) => {
   const newUserId = generateRandomString();
   const newEmail = req.body["email"];
   const newPassword = req.body["password"];
+  const hashedPassword = bcrypt.hashSync(newPassword, 10);
 
   // Error Handler
 
   // edge case 1 - empty email or password
-  if (newEmail === "" || newPassword === "") {
+  if (newEmail === "" || hashedPassword === "") {
     return res.status(400).send("Please enter a correct input");
   }
 
@@ -123,11 +127,12 @@ app.post("/register", (req, res) => {
       userDatabase[newUserId] = {
         id: newUserId,
         email: newEmail,
-        password: newPassword,
+        password: hashedPassword,
       };
     }
   }
 
+  console.log(userDatabase);
   res.cookie("user_id", newUserId);
   // console.log(userDatabase);
   
@@ -142,7 +147,9 @@ app.post("/logout", (req, res) => {
 });
 
 
-// <<< new shortURL Generator >>>
+/*
+* <<< new shortURL Generator >>>
+*/
 
 // Get request; Renders the template urls_new
 app.get("/urls/new", (req, res) => {
@@ -212,7 +219,10 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
-// <<< DELETE >>>
+/*
+* <<< DELETE >>>
+*/
+
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   
@@ -234,7 +244,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-// <<< UPDATE >>>
+/*
+* <<< UPDATE >>>
+*/
+
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newlongURL = req.body.newlongURL;
@@ -259,7 +272,9 @@ app.post("/urls/:shortURL", (req, res) => {
 
 
 
-// <<< LOG IN ROUTE >>>
+/*
+* <<< LOG IN ROUTE >>>
+*/
 
 // Get requset for log in page
 app.get("/login", (req, res) => {
@@ -280,7 +295,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("This email is not registered!");
   }
   // check email and password are matches to the inside of that special user ID
-  if (userInfo.email === userEmail && userInfo.password === userPassword) {
+  if (userInfo.email === userEmail && bcrypt.compareSync(userPassword, userInfo.password)) {
     res.cookie("user_id", userInfo.id);
     // redirect to the homepage if user successfully login
     res.redirect("/urls");

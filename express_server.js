@@ -33,16 +33,28 @@ const userDatabase = {
     id: "aJ48lW",
     email: "user3@example.com",
     password: "qwer"
-  }
+  },
 };
+
+// Helper functions
 
 const getUserByEmail = (userDatabase, email) => {
   for (let userID in userDatabase) {
     if (userDatabase[userID].email === email) {
       return userDatabase[userID];
     }
-    return undefined;
   }
+  return undefined;
+};
+
+const urlsForUser = (urlDatabase, id) => {
+  let result = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      result[url] = urlDatabase[url];
+    }
+  }
+  return result;
 };
 
 // << Server Settings/middlewares >>
@@ -58,25 +70,15 @@ app.get("/", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json("urlDatabase");
 });
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
-// app.get("/set", (req, res) => {
-//   const a = 1;
-//   res.send(`a = ${a}`);
-// });
-// app.get("/fetch", (req, res) => {
-//   res.send(`a = ${a}`);
-// });
-
 
 
 // <<< HOMEPAGE >>>
 
 app.get("/urls", (req, res) => {
+  // let urls = urlsForUser(urlDatabase, req.cookies["user_id"]);
   const templateVars = {
     user: userDatabase[req.cookies["user_id"]],
-    urls: urlDatabase,
+    urls: urlsForUser(urlDatabase, req.cookies["user_id"]),
   };
   res.render("urls_index", templateVars);
 });
@@ -189,6 +191,12 @@ app.get("/urls/:shortURL", (req, res) => {
     user: userDatabase[req.cookies["user_id"]]
   };
 
+  // check if user logged in. Users can't see the urls that is not belong to them
+  if (!req.cookies["user_id"]) {
+    return res.status(401).render("urls_show", templateVars);
+  }
+  
+
   res.render("urls_show", templateVars);
 });
 
@@ -208,6 +216,19 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   
+  // Error Handler
+  // Case 1 - Is user logged in? If not, send the error message
+  if (!req.cookies["user_id"]) {
+    return res.status(401).send("You don't have a permission");
+  }
+  // Case 2 - if given URL is not exsist, return error message
+  if (!shortURL) {
+    return res.status(404).send("Wrong path! URL doesn't exsist");
+  }
+  // Case 3 - if user doesn't own the url, return error message
+  if (req.cookies["user_id"] && urlDatabase[shortURL].userID !== req.cookies["user_id"]) {
+    return res.status(401).send("You don't own this url check url list or register new url");
+  }
   delete urlDatabase[shortURL];
 
   res.redirect("/urls");
@@ -217,6 +238,20 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newlongURL = req.body.newlongURL;
+
+  // Error Handler
+  // Case 1 - Is user logged in? If not, send the error message
+  if (!req.cookies["user_id"]) {
+    return res.status(401).send("You don't have a permission");
+  }
+  // Case 2 - if given URL is not exsist, return error message
+  if (!shortURL) {
+    return res.status(404).send("Wrong path! URL doesn't exsist");
+  }
+  // Case 3 - if user doesn't own the url, return error message
+  if (req.cookies["user_id"] && urlDatabase[shortURL].userID !== req.cookies["user_id"]) {
+    return res.status(401).send("You don't own this url check url list or register new url");
+  }
 
   urlDatabase[shortURL].longURL = newlongURL;
   res.redirect("/urls");
@@ -240,24 +275,21 @@ app.post("/login", (req, res) => {
   const userPassword = req.body["password"];
   let userInfo = getUserByEmail(userDatabase, userEmail);
 
-  // Check if email is exsisting in our Database
+  // Check if email is exsisting in our Database and send a message if not
   if (userInfo === undefined) {
     return res.status(403).send("This email is not registered!");
   }
-  // If email is exsisting,
-  if (userInfo) {
-    // check email and password are matches to the inside of that special user ID
-    if (userInfo.email === userEmail && userInfo.password === userPassword) {
-      res.cookie("user_id", userInfo.id);
-      // redirect to the homepage if user successfully login
-      res.redirect("/urls");
-    } else {
-      res.status(403).send("Incorrect password!");
-    }
+  // check email and password are matches to the inside of that special user ID
+  if (userInfo.email === userEmail && userInfo.password === userPassword) {
+    res.cookie("user_id", userInfo.id);
+    // redirect to the homepage if user successfully login
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("Incorrect password!");
   }
 });
 
-// << Listener >>
+// <<< Listener >>>
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

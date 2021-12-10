@@ -6,16 +6,17 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <title>URL - TinyApp Example</title>
 </head>
-
+<% if (user) { %>
 <body>
   <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
-      </div>
+  </div>
     <div class="card-footer text-muted">
       <h2>Edit</h2>
+
       <form method="post" action="/urls/<%= shortURL %>">
         <label>
           New URL:
@@ -23,8 +24,17 @@
         <input type="text" name="newlongURL">
         <button type="submit" class="btn btn-primary"><b>Edit</b></button>
       </form>
+      
     </div>
+</body>
+<% } else { %>
+  <div class="alert alert-warning" role="alert">
+    <h5 class="alert heading">You can't access the urls</h5>
+    <p>
+      If you have the account, please <a href="/login" class="alert-link">Login</a>.
+    </p>
   </div>
+<% } %>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

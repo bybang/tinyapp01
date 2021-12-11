@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 // const cookieParser = require("cookie-parser");
 const generateRandomString = () => Math.random().toString(36).slice(2, 8);
 const bcrypt = require('bcryptjs');
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 
 // Database
 const urlDatabase = {
@@ -39,7 +39,7 @@ const userDatabase = {
 };
 
 // Helper functions imported from helper.js
-const { getUserByEmail } = require("./helpers")
+const { getUserByEmail } = require("./helpers");
 
 const urlsForUser = (urlDatabase, id) => {
   let result = {};
@@ -63,7 +63,7 @@ app.use(cookieSession({
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 
 
 
@@ -299,7 +299,7 @@ app.post("/login", (req, res) => {
   }
   // check email and password are matches to the inside of that special user ID
   if (userInfo.email === userEmail && bcrypt.compareSync(userPassword, userInfo.password)) {
-    req.session["user_id"] = userInfo.id
+    req.session["user_id"] = userInfo.id;
     // redirect to the homepage if user successfully login
     res.redirect("/urls");
   } else {

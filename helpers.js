@@ -12,6 +12,6 @@ const getUserByEmail = (userDatabase, email) => {
   return null;
 };
 
-// 
+//
 
 module.exports = { getUserByEmail, };

@@ -38,16 +38,8 @@ const userDatabase = {
   },
 };
 
-// Helper functions
-
-const getUserByEmail = (userDatabase, email) => {
-  for (let userID in userDatabase) {
-    if (userDatabase[userID].email === email) {
-      return userDatabase[userID];
-    }
-  }
-  return undefined;
-};
+// Helper functions imported from helper.js
+const { getUserByEmail } = require("./helpers")
 
 const urlsForUser = (urlDatabase, id) => {
   let result = {};

@@ -17,16 +17,20 @@
     <main style="margin: 1em;">
       <h3>Create New Account</h3>
 
-      <form method="POST" action="/register" class="form-inline">
-        <div class="form-group mb-2">
-          <label for="email">Enter your Email address: </label>
-          <input class="form-control" type="email" name="email" placeholder="Please enter: Email@example.com" style="width: 300px; margin: 1em">
+      <form method="POST" action="/register">
+      
+        <div class="form-group">
+          <label for="exampleInputEmail1">Email address</label>
+          <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Please enter: Email@example.com">
+          <small id="emailHelp" class="form-text text-muted">This email will be your new ID to login</small>
         </div>
-        <div class="form-group mb-2">          
-          <label for="pasword">Password: </label>
-          <input class="form-control" type="password" name="password" placeholder="Please enter password here" style="width: 300px; margin: 1em">
-          <button type="submit" class="btn btn-primary">Submit</button>
+        <div class="form-group">
+          <label for="exampleInputPassword1">Password</label>
+          <input type="password" name="password" class="form-control" id="exampleInputPassword1" placeholder="Please enter new password">
+          <small id="emailHelp" class="form-text text-muted">Please enter your super secret password</small>
         </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+
       </form>
 
     </main>

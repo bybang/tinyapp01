@@ -4,29 +4,16 @@
   <%- include ('partials/_header') %>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <title>URL - TinyApp Example</title>
+  <title>Error - Wrong path</title>
 </head>
-<% if (user) { %>
-    <body>
-      <div class="card text-center">
-          <div class="card-header"></div>
-          <div class="card-body">
-            <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-            <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
-      </div>
-        <div class="card-footer text-muted">
-          <h2>Edit</h2>
-    
-          <form method="post" action="/urls/<%= shortURL %>">
-            <label>
-              New URL:
-            </label>
-            <input type="text" name="newlongURL">
-            <button type="submit" class="btn btn-primary"><b>Edit</b></button>
-          </form>
-          
-        </div>
-    </body>
+<% if (!user) { %>
+
+    <div class="alert alert-warning" role="alert">
+      <h5 class="alert heading">You can't access the urls</h5>
+      <p>
+        If you have the account, please <a href="/login" class="alert-link">Login</a>.
+      </p>
+    </div>
 
 <% } %>
 

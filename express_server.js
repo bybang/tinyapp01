@@ -4,9 +4,12 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 // const cookieParser = require("cookie-parser");
-const generateRandomString = () => Math.random().toString(36).slice(2, 8);
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
+// Helper functions imported from helper.js
+const { getUserByEmail, urlsForUser, generateRandomString } = require("./helpers");
+
+
 
 // Database
 const urlDatabase = {
@@ -17,6 +20,10 @@ const urlDatabase = {
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW"
+  },
+  cb0345: {
+    longURL: "https://www.lighthouselabs.ca/",
+    userID: "userRandomID"
   }
 };
 
@@ -38,18 +45,7 @@ const userDatabase = {
   },
 };
 
-// Helper functions imported from helper.js
-const { getUserByEmail } = require("./helpers");
 
-const urlsForUser = (urlDatabase, id) => {
-  let result = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      result[url] = urlDatabase[url];
-    }
-  }
-  return result;
-};
 
 /*
 * << Server Settings/middlewares >>
@@ -73,16 +69,25 @@ app.use(cookieSession({
 *
 */
 
-// <<< ROOT >>>
+/*
+* <<< ROOT ROUTE>>>
+*/
+
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session["user_id"]) {
+    res.redirect("/urls");
+  }
+  res.redirect("/login");
 });
 app.get("/urls.json", (req, res) => {
-  res.json("urlDatabase");
+  res.json(userDatabase);
 });
 
 
-// <<< HOMEPAGE >>>
+
+/*
+* <<< HOMEPAGE ROUTE >>>
+*/
 
 app.get("/urls", (req, res) => {
   const templateVars = {
@@ -148,66 +153,9 @@ app.post("/register", (req, res) => {
 
 
 
-
 /*
-* <<< new shortURL Generator >>>
+* <<< REDIRECT >>>
 */
-
-// Get request; Renders the template urls_new
-app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: userDatabase[req.session["user_id"]],
-  };
-  
-  // if user is not logged in, redirect them to the homepage
-  if (!req.session["user_id"]) {
-    return res.redirect("/login");
-  }
-  
-  res.render("urls_new", templateVars);
-});
-
-// Post request for new shortURL
-app.post("/urls", (req, res) => {
-  const { longURL } = req.body;
-  let shortURL = generateRandomString();
-  
-  // if users are not logged in, they can't use the generator. Redirect them to the login page
-  if (!req.session["user_id"]) {
-    return res.status(401).send("Wrong path");
-  }
-  // if long URL did not passed to the generator
-  if (!longURL) {
-    return res.status(400).send("Pass the longURL");
-  }
-  
-  urlDatabase[shortURL] = {
-    longURL,
-    userID: req.session["user_id"]
-  };
-  
-  res.redirect(`/urls/${shortURL}`);
-});
-
-// A page after generate the shortURL
-app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL =  urlDatabase[shortURL].longURL;
-  
-  const templateVars = {
-    shortURL,
-    longURL,
-    user: userDatabase[req.session["user_id"]]
-  };
-  
-  // check if user logged in. Users can't see the urls that is not belong to them
-  if (!req.session["user_id"]) {
-    return res.status(401).render("urls_show", templateVars);
-  }
-  
-  
-  res.render("urls_show", templateVars);
-});
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
@@ -221,14 +169,45 @@ app.get("/u/:shortURL", (req, res) => {
   }
 });
 
+
+
 /*
-* <<< DELETE >>>
+* <<< UPDATE & DELETE >>>
 */
+
+// UPDATE ROUTE
+
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const newlongURL = req.body.newlongURL;
+  
+  // Error Handler
+  
+  // Case 1 - Is user logged in? If not, send the error message
+  if (!req.session["user_id"]) {
+    return res.status(401).send("You don't have a permission");
+  }
+  // Case 2 - if given URL is not exsist, return error message
+  if (!shortURL) {
+    return res.status(404).send("Wrong path! URL doesn't exsist");
+  }
+  // Case 3 - if user doesn't own the url, return error message
+  if (req.session["user_id"] && urlDatabase[shortURL].userID !== req.session["user_id"]) {
+    return res.status(401).send("You don't own this url! Check your list or register new url");
+  }
+  
+  urlDatabase[shortURL].longURL = newlongURL;
+  res.redirect("/urls");
+});
+
+
+// DELETE
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   
   // Error Handler
+
   // Case 1 - Is user logged in? If not, send the error message
   if (!req.session["user_id"]) {
     return res.status(401).send("You don't have a permission");
@@ -246,32 +225,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-/*
-* <<< UPDATE >>>
-*/
-
-app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const newlongURL = req.body.newlongURL;
-  
-  // Error Handler
-  // Case 1 - Is user logged in? If not, send the error message
-  if (!req.session["user_id"]) {
-    return res.status(401).send("You don't have a permission");
-  }
-  // Case 2 - if given URL is not exsist, return error message
-  if (!shortURL) {
-    return res.status(404).send("Wrong path! URL doesn't exsist");
-  }
-  // Case 3 - if user doesn't own the url, return error message
-  if (req.session["user_id"] && urlDatabase[shortURL].userID !== req.session["user_id"]) {
-    return res.status(401).send("You don't own this url check url list or register new url");
-  }
-  
-  urlDatabase[shortURL].longURL = newlongURL;
-  res.redirect("/urls");
-});
-
 
 
 /*
@@ -280,7 +233,15 @@ app.post("/urls/:shortURL", (req, res) => {
 
 // LOGIN ROUTE
 // Get requset for log in page
+
 app.get("/login", (req, res) => {
+  // Error Handler
+
+  // Case 1 - if user logged in, send them back to homepage
+  if (req.session["user_id"]) {
+    return res.redirect("/urls");
+  }
+
   const templateVars = {
     user: userDatabase[req.session["user_id"]],
   };
@@ -288,6 +249,7 @@ app.get("/login", (req, res) => {
 });
 
 // Post requset for log in to the app
+
 app.post("/login", (req, res) => {
   const userEmail = req.body["email"];
   const userPassword = req.body["password"];
@@ -303,18 +265,106 @@ app.post("/login", (req, res) => {
     // redirect to the homepage if user successfully login
     res.redirect("/urls");
   } else {
-    res.status(403).send("Incorrect password!");
+    res.status(403).send("Please enter the correct password");
   }
 });
 
+
 // LOGOUT ROUTE
+
 app.post("/logout", (req, res) => {
+  console.log(`User: ${req.session["user_id"]} logged out!`);
   req.session["user_id"] = null;
   res.redirect("/urls");
 });
 
 
+
+/*
+* <<< new shortURL Generator >>>
+*/
+
+// Get request; Renders the template urls_new
+
+app.get("/urls/new", (req, res) => {
+  const templateVars = {
+    user: userDatabase[req.session["user_id"]],
+  };
+  
+  // if user is not logged in, redirect them to the homepage
+  if (!req.session["user_id"]) {
+    return res.redirect("/login");
+  }
+  
+  res.render("urls_new", templateVars);
+});
+
+
+// Post request for new shortURL
+
+app.post("/urls", (req, res) => {
+  const { longURL } = req.body;
+  let shortURL = generateRandomString();
+  
+  // Error Handler
+  // Case 1 - User not logged in, but request to generate shortURL(curl -x) => send them error message
+  if (!req.session["user_id"]) {
+    return res.status(401).send("Wrong path");
+  }
+  // Case 2 - If longURL doesn't exsist, send the error message
+  if (!longURL) {
+    return res.status(400).send("Pass the longURL");
+  }
+  
+  urlDatabase[shortURL] = {
+    longURL,
+    userID: req.session["user_id"]
+  };
+  
+  res.redirect(`/urls/${shortURL}`);
+});
+
+
+// A page after generate the shortURL
+
+app.get("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  // Error Handler
+  
+  // Case 1 - If url does not exsist, send the error message
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send("Wrong path! URL doesn't exsist");
+  }
+  
+  const longURL =  urlDatabase[shortURL].longURL;
+
+  const templateVars = {
+    shortURL,
+    longURL,
+    user: userDatabase[req.session["user_id"]],
+    urls: urlsForUser(urlDatabase, req.session["user_id"]),
+  };
+  
+  // Case 2 - If shortURL exsist, is user logged in? If not, send the error message
+  if (!req.session["user_id"]) {
+    return res.status(401).send(`You don't have a permission! If you have the account, Please <a href="/login">Login</a>`);
+  }
+  
+  // Case 3 - Is user logged in but not owns the URL, send the error message
+  if (req.session["user_id"] !== urlDatabase[shortURL].userID) {
+    return res.status(401).render("urls_error", templateVars);
+  }
+  
+  // Happy path
+  if (req.session["user_id"] === urlDatabase[shortURL].userID) {
+    return res.render("urls_show", templateVars);
+  }
+});
+
+
+
 // <<< Listener >>>
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

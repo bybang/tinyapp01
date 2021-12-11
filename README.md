@@ -8,10 +8,10 @@ TinyApp is a full stack web application built with Node and Express that allows 
 ![Homepage/default page](https://github.com/bybang/tinyapp01/blob/master/docs/TinyApp%20-%20Homepage.png?raw=true)
 
 > ### *Login Page*
-![Login]("https://user-images.githubusercontent.com/85023116/145666547-c36fc9e2-7155-4239-a338-58b3971433c6.png")
+![Login](https://user-images.githubusercontent.com/85023116/145666547-c36fc9e2-7155-4239-a338-58b3971433c6.png)
 
 > ### *Register Page*
-![Register]("https://user-images.githubusercontent.com/85023116/145666640-11b12b4e-4fbb-4a14-a0ae-f8d125a10acd.png")
+![Register](https://user-images.githubusercontent.com/85023116/145666640-11b12b4e-4fbb-4a14-a0ae-f8d125a10acd.png)
 
 > ### *URL Creator Page*
 ![URL Creator](https://github.com/bybang/tinyapp01/blob/master/docs/TinyApp%20-%20urlCreator.png?raw=true)
